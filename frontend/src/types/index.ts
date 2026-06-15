@@ -6,11 +6,15 @@ export interface WaveformData {
   samplingRate: number
 }
 
+export type ConfidenceLevel = 'high' | 'medium' | 'low'
+
 export interface PhasePick {
   id: string
   type: 'P' | 'S'
   time: number
   confidence: number
+  confidenceLevel: ConfidenceLevel
+  needsReview: boolean
   method: string
 }
 

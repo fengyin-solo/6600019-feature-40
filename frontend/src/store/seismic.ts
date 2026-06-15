@@ -1,6 +1,12 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { WaveformData, PhasePick, Station, SeismicEvent } from '../types'
+import type { WaveformData, PhasePick, Station, SeismicEvent, ConfidenceLevel } from '../types'
+
+function classifyConfidence(confidence: number): { level: ConfidenceLevel; needsReview: boolean } {
+  if (confidence >= 0.8) return { level: 'high', needsReview: false }
+  if (confidence >= 0.5) return { level: 'medium', needsReview: false }
+  return { level: 'low', needsReview: true }
+}
 
 export const useSeismicStore = defineStore('seismic', () => {
   const waveform = ref<WaveformData | null>(null)
@@ -72,8 +78,8 @@ export const useSeismicStore = defineStore('seismic', () => {
   function loadMockData() {
     waveform.value = generateMockWaveform()
     picks.value = [
-      { id: 'p1', type: 'P', time: 10.2, confidence: 0.92, method: 'STA/LTA' },
-      { id: 'p2', type: 'S', time: 22.5, confidence: 0.88, method: 'STA/LTA' },
+      { id: 'p1', type: 'P', time: 10.2, confidence: 0.92, ...classifyConfidence(0.92), method: 'STA/LTA' },
+      { id: 'p2', type: 'S', time: 22.5, confidence: 0.88, ...classifyConfidence(0.88), method: 'STA/LTA' },
     ]
   }
 
@@ -105,6 +111,7 @@ export const useSeismicStore = defineStore('seismic', () => {
             type: newPicks.length === 0 ? 'P' : 'S',
             time: t,
             confidence: Math.min(1, ratio / 10),
+            ...classifyConfidence(Math.min(1, ratio / 10)),
             method: 'STA/LTA'
           })
         }
@@ -122,7 +129,11 @@ export const useSeismicStore = defineStore('seismic', () => {
       if (resp.ok) {
         const data = await resp.json()
         waveform.value = data.waveform
-        picks.value = data.picks || []
+        picks.value = (data.picks || []).map((p: any) => ({
+          ...p,
+          confidenceLevel: p.confidenceLevel ?? classifyConfidence(p.confidence).level,
+          needsReview: p.needsReview ?? classifyConfidence(p.confidence).needsReview,
+        }))
       }
     } catch {
       loadMockData()

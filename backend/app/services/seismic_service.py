@@ -3,6 +3,15 @@ import numpy as np
 from typing import List, Dict, Any
 
 
+def classify_confidence(confidence: float) -> Dict[str, Any]:
+    if confidence >= 0.8:
+        return {"confidence_level": "high", "needs_review": False}
+    elif confidence >= 0.5:
+        return {"confidence_level": "medium", "needs_review": False}
+    else:
+        return {"confidence_level": "low", "needs_review": True}
+
+
 def generate_mock_waveform(duration: int = 60, sr: int = 100) -> Dict[str, Any]:
     """Generate synthetic seismic waveform with P and S arrivals."""
     n = sr * duration
@@ -57,11 +66,13 @@ def sta_lta_pick(data: List[float], sr: int,
     for i in range(len(ratio)):
         if ratio[i] > threshold and (i / sr - last_pick) > 2:
             t = (i + lta_len) / sr
+            confidence = round(min(1.0, ratio[i] / 10), 2)
             picks.append({
                 "id": f"pick_{i}",
                 "type": "P" if not picks else "S",
                 "time": round(t, 2),
-                "confidence": round(min(1.0, ratio[i] / 10), 2),
+                "confidence": confidence,
+                **classify_confidence(confidence),
                 "method": "STA/LTA",
             })
             last_pick = t

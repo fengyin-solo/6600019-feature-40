@@ -7,6 +7,8 @@ class PhasePick(BaseModel):
     type: str  # 'P' or 'S'
     time: float
     confidence: float
+    confidence_level: str
+    needs_review: bool
     method: str
 
 

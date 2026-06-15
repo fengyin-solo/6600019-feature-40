@@ -37,10 +37,24 @@
       <!-- Picks -->
       <div class="bg-gray-800 rounded-xl p-3">
         <h3 class="text-cyan-300 font-bold text-sm mb-2">震相拾取结果</h3>
-        <div v-for="p in store.picks" :key="p.id" class="flex justify-between bg-gray-700 rounded p-2 mb-1 text-sm">
-          <span :class="p.type === 'P' ? 'text-red-400' : 'text-blue-400'">{{ p.type }} 波</span>
-          <span>{{ p.time.toFixed(2) }}s</span>
-          <span class="text-gray-400">{{ (p.confidence * 100).toFixed(0) }}%</span>
+        <div v-for="p in store.picks" :key="p.id" class="bg-gray-700 rounded p-2 mb-1 text-sm"
+          :class="p.needsReview ? 'ring-1 ring-amber-500' : ''">
+          <div class="flex justify-between items-center">
+            <span :class="p.type === 'P' ? 'text-red-400' : 'text-blue-400'">{{ p.type }} 波</span>
+            <span>{{ p.time.toFixed(2) }}s</span>
+            <span class="flex items-center gap-1">
+              <span class="text-gray-400">{{ (p.confidence * 100).toFixed(0) }}%</span>
+              <span class="text-xs px-1 rounded"
+                :class="{
+                  'bg-green-900 text-green-300': p.confidenceLevel === 'high',
+                  'bg-yellow-900 text-yellow-300': p.confidenceLevel === 'medium',
+                  'bg-red-900 text-red-300': p.confidenceLevel === 'low',
+                }">
+                {{ p.confidenceLevel === 'high' ? '高' : p.confidenceLevel === 'medium' ? '中' : '低' }}
+              </span>
+              <span v-if="p.needsReview" class="text-amber-400 text-xs font-bold">⚠ 复核</span>
+            </span>
+          </div>
         </div>
         <div v-if="!store.picks.length" class="text-gray-600 text-xs">加载数据后运行拾取</div>
       </div>
